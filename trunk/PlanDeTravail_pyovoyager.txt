@@ -1,0 +1,100 @@
+Plan de travail - version 1
+Création musicale en langage Python 2
+Julie Delisle
+
+1. Énoncé
+Émulateur d'un synthétiseur analogique de type MiniMoog Voyager XL
+
+2. Analyse des besoins
+-Audio: Implémentation de chacune des composantes du synthétiseur: oscillateurs et mixeur, filtres, générateurs d'enveloppe, LFOs et Sample-and-Hold.
+-Interface graphique: boutons et potentiomètres pour le contrôle des éléments mentionnés ci-haut; clavier virtuel.
+-Contrôleurs externes: MIDI learn, contrôle des différentes variables.
+-Préférences et menus.
+
+3. Acquisition de connaissances
+-Lecture du manuel de l'utilisateur du MiniMoog Voyager XL pour bien comprendre le fonctionnement de ses différentes composantes et avoir une bonne idée des possibilités offertes par l'instrument.
+-Révision des notions et des scripts vus dans le cours MUS1323-Création musicale en langage Python 1 (mise à jour des connaissances).
+-Lecture d'articles en rapport avec les synthétiseurs analogiques et leur émulation (suggestions):
+	-Chaudhary, A. (2001). Band-Limited Simulation of Analog
+	 Synthesizer Modules by Additive Synthesis. Center for New Music
+	 and Audio Technologies, University of California, Berkeley.
+	-Lane, J et al. (1997). Modeling Analog Synthesis with DSPs.
+	 Computer Music Journal, Vol. 21, no.4, pp.23-41
+	-Dykiert, M. et Gold, N. (2011). Support for learning synthesizer
+	 programming. Computer Science Department, University College
+	 London.
+	-Huovilainen, A. et Välimäki, V. (2006). Oscillator and Filter
+	 Algorithms for Virtual Analog Synthesis. Computer Music Journal,
+	 30:2, pp.19-31
+	-Lawson, J. et Mathews, M. (1977). Computer Program to Control
+	 Digital Real-Time Sound Synthesizer. Computer Music Journal, 1:4,
+	 pp.16-21.
+-Étudier le fonctionnement de programmes informatiques se rapportant au projet:
+	-Analog-box: http://code.google.com/p/analog-box/
+	-Synthclone: http://code.google.com/p/synthclone/
+	-Zyne: http://code.google.com/p/zyne/
+	
+4. Modèle
+	I. Composantes de base
+		-Générateurs: 3 Oscillateurs et un générateur de bruit
+		 (peut-être plus). Contrôles: fréquence (potentiomètre -
+		 variation de -7 à +7 demi-tons, pour les oscillateurs 2 et 3
+		 seulement, ajustés par rapport à la fréquence de l'oscillateur
+		 1); octave (commutateur - 32',16',8',4',2',1'); forme d'onde 
+		 (commutateur - triangulaire, dents de scie, carrée 1/1, carrée
+		 1/2).
+		
+		-Mixeur: Commutateur on/off pour les 3 oscillateurs et le
+		 générateur de bruit; potentiomètre de volume pour chacun et
+		 volume master; possibilité d'ajouter une source externe en
+		 entrée (à voir).
+		
+		*Options supplémentaires (à voir): sync oscillateurs 1-2
+		 (on/off), FM entre oscillateurs 3-1 (on/off), 3 keyboard
+		 control (on/off), fréquence du 3e oscillateur (lo=LFO 
+		 auxiliaire; hi=oscillateur standard).  Fine tune (pour ajuster
+		 la fréquence de l'oscillateur 1 à une source externe); glide
+		 on/off et glide rate.
+		
+		-Filtres: mode (dual lowpass ou highpass/lowpass), fréquence de
+		 coupure (cutoff), pente en dB/octave du filtre (cutoff slope,
+		 de -3 à +3), résonance du filtre (à voir). Possibilité
+		 d'ajouter un keyboard amount control (ajustement du filtre en
+		 fonction du registre joué).
+		
+		-Générateurs d'enveloppe: ADSR s'appliquant au volume master,
+		 ADSR s'appliquant au filtre.
+		
+		-LFO primaire (qu'on peut assigner à différents contrôles)
+		-Sample-and-Hold (rate + LFO Sync).
+	
+	II. Contrôle externe
+		-Trouver le contrôleur MIDI approprié (!)
+		-Clavier: notes (contrôle de la fréquence), vélocité (volume,
+		 filtre), contrôle du release de l'ADSR à partir du relâchement
+		 de la touche (envelope gate).
+		
+		*Bonus: ribbon controller et touch surface controller
+		 (paramètres X et Y); roulettes de modulation.
+		
+	III. Interface graphique
+		-Trouver la façon optimale de rendre les contrôles mentionnés
+		 ci-haut accessibles à l'utilisateur s'il ne possède pas de
+		 contrôleur MIDI; faire en sorte que les actions de l'utilisateur
+		 soient visibles à l'écran.
+		-Les boutons et potentiomètres pourraient ressembler à ceux du
+		 MiniMoog Voyager, et être divisés en section comme sur le vrai
+		 synthétiseur analogique.
+		
+5. Méthodes
+-Cette section sera à compléter; il m'est impossible de tout décrire aussi tôt dans les étapes de la réalisation du projet.  Je commencerai par créer les oscillateurs, le générateur de bruit et leurs contrôles, puis l'interface de mixage. Ceux-ci auront probablement leurs classes audio, avec les méthodes permettant de contrôler leurs paramètres. Il est possible que je crée une interface graphique de base pour faciliter les tests à cette étape.
+-Ensuite viendront les filtres, les éléments reliés aux LFOs, puis les générateurs d'enveloppe. L'interface graphique de base sera modifiée pour chaque composante ajoutée.
+-L'étape suivante sera d'intégrer les contrôles MIDI et de faire en sorte que le tout soit viable.
+-Finalement (si je me rends là), il s'agira de perfectionner le synthétiseur et son interface graphique.  On verra pour l'ajout de composantes et de possibilités de contrôle supplémentaires.
+
+6. Implémentation
+Celle-ci se fera dans l'environnement Pyo (bien entendu!).  Je suivrai les étapes décrites dans la section "Méthodes".  Cette section sera complété au fur et à mesure.
+
+7. Test et maintenance
+Je m'appliquerai à faire des tests à chaque ajout de composante ou de contrôle de paramètre, de manière à cibler plus rapidement les problèmes.
+		
