@@ -1,0 +1,49 @@
+Last update: Mercredi 13 février 2013
+
+-Les générateurs de bruit blanc, bruit rose, sinusoïde et onde carrée sont faits. 
+Voici ce qu'il reste à faire du côté des générateurs:
+
+-Trouver l'équation de l'onde triangulaire (probablement une combinaison de sinusoïdes), de l'onde carrée avec le pulse plus étroit (je me comprends), de l'onde en dents de scie, et peut-être des formes d'ondes intermédiaires (à voir, si c'est pas trop compliqué).
+-S'arranger pour que toutes les formes d'ondes sortent avec la même amplitude, en stéréo (amplitude modérée).
+-Assigner un nombre à chaque forme d'onde, dans l'ordre d'apparition sur le commutateur, en gardant le 0 et le 1 pour les générateurs de bruit (pour commencer à travailler; voir ensuite avec l'interface graphique).
+
+*Utiliser ctrl pour tester les objets avec différentes valeurs assignées aux variables?
+
+-Transformer le tout en classes "Oscillator/Noise_generator". 
+Méthodes: 
+-set.osc_type(osc seulement): oscillateur principal ou secondaire (1-2)
+-set.wave(osc seulement): forme d'onde (sine, triangular, sawtooth, square, rectangular)
+-set.noise(noise seulement): sorte de bruit (blanc ou rose)
+-set.main_freq(osc seulement): fréquence principale (qui est celle de l'oscillateur principal - prévoir une fréquence par défaut modifiable par le fine tune)   *trouver la fréquence par défaut du Minimoog Voyager!
+-set.sec_freq(osc seulement): fréquence des oscillateurs secondaires (en fonction de la fréquence principale, déviation en demi-tons, de -7 à 7)
+-set.octave(osc seulement): octave (32 par défaut; multiplier par deux pour les autres - 16,8,4,2,1 --> assigner les exposants des puissances de deux au commutateur?)
+-set.volume(les deux): amplitude de sortie du générateur (multiplier l'amplitude par défaut par ce facteur)
+
+Interface graphique: grosse classe "MyFrame"!
+-Prévoir 4 places pour des générateurs; on aura un générateur de bruit, un oscillateur principal et deux oscillateurs secondaires par défaut (3 knobs/commutateurs par générateur sauf pour le générateur de bruit, qui n'a qu'un commutateur (ou un potentiomètre dans le cas d'un filtre à pente variable, ajustable par l'utilisateur - à voir)).
+-Prévoir 4 cases pour le mixer (1 knob + 1 potentiomètre par case, sauf pour le volume master, qui n'a qu'un potentiomètre)
+
+Pour le générateur de bruit:
+-Choix entre bruit blanc et bruit rose (menu avec 2 choix - on verra pour un filtre à pente variable plus tard.) --> set.noise
+
+Pour l'oscillateur principal (principal -> à indiquer à l'objet)
+-Forme d'onde (commutateur) --> set.wave
+-Fine tune (pour main_freq - knob) --> set.main_freq
+-Octave (commutateur) --> set.octave
+
+Pour les oscillateurs secondaires (secondaire -> à indiquer à l'objet)
+-Forme d'onde (commutateur) --> set.wave
+-Fréquence (pour other_freqs - knob) --> set.sec_freq
+-Octave (commutateur) --> set.octave
+
+Mixer:
+-On/off générateur de bruit (switch) --> méthodes play/stop?
+-Volume générateur de bruit (knob) --> set.volume
+-On/off oscillateur principal (switch) --> méthodes play/stop?
+-Volume oscillateur principal (knob) --> set.volume
+-On/off oscillateur 2 (switch) --> méthodes play/stop?
+-Volume oscillateur 2 (knob) --> set.volume
+-On/off oscillateur 3 (switch) --> méthodes play/stop?
+-Volume oscillateur 3 (knob) --> set.volume
+-Volume master (potentiomètre) --> envoyer la valeur à une variable qui contrôle le mul de l'objet Mix. À mettre dans le script principal.
+
