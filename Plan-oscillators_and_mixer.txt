@@ -1,13 +1,8 @@
-Last update: Mercredi 13 février 2013
+Last update: Jeudi 14 février 2013
 
--Les générateurs de bruit blanc, bruit rose, sinusoïde et onde carrée sont faits. 
-Voici ce qu'il reste à faire du côté des générateurs:
+-Les générateurs de bruit blanc, bruit rose, sinusoïde, onde carrée, onde triangulaire et onde en dents de scie sont faits. 
 
--Trouver l'équation de l'onde triangulaire (probablement une combinaison de sinusoïdes), de l'onde carrée avec le pulse plus étroit (je me comprends), de l'onde en dents de scie, et peut-être des formes d'ondes intermédiaires (à voir, si c'est pas trop compliqué).
--S'arranger pour que toutes les formes d'ondes sortent avec la même amplitude, en stéréo (amplitude modérée).
--Assigner un nombre à chaque forme d'onde, dans l'ordre d'apparition sur le commutateur, en gardant le 0 et le 1 pour les générateurs de bruit (pour commencer à travailler; voir ensuite avec l'interface graphique).
-
-*Utiliser ctrl pour tester les objets avec différentes valeurs assignées aux variables?
+À faire:
 
 -Transformer le tout en classes "Oscillator/Noise_generator". 
 Méthodes: 
