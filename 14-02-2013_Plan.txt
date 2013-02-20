@@ -6,13 +6,13 @@ Last update: Jeudi 14 février 2013
 
 -Transformer le tout en classes "Oscillator/Noise_generator". 
 Méthodes: 
--set.osc_type(osc seulement): oscillateur principal ou secondaire (1-2)
+-set.type(osc seulement): oscillateur principal ou secondaire (1-2)
 -set.wave(osc seulement): forme d'onde (sine, triangular, sawtooth, square, rectangular)
 -set.noise(noise seulement): sorte de bruit (blanc ou rose)
 -set.main_freq(osc seulement): fréquence principale (qui est celle de l'oscillateur principal - prévoir une fréquence par défaut modifiable par le fine tune)   *trouver la fréquence par défaut du Minimoog Voyager!
--set.sec_freq(osc seulement): fréquence des oscillateurs secondaires (en fonction de la fréquence principale, déviation en demi-tons, de -7 à 7)
+-set.sec_freq(osc seulement): fréquence des oscillateurs secondaires (en fonction de la fréquence principale, déviation en demi-tons, de -7 à 7) --> main_freq*2^(sec_freq/12)
 -set.octave(osc seulement): octave (32 par défaut; multiplier par deux pour les autres - 16,8,4,2,1 --> assigner les exposants des puissances de deux au commutateur?)
--set.volume(les deux): amplitude de sortie du générateur (multiplier l'amplitude par défaut par ce facteur)
+-set.volume(les deux - attribut mul. du PyoObject): amplitude de sortie du générateur (multiplier l'amplitude par défaut par ce facteur)
 
 Interface graphique: grosse classe "MyFrame"!
 -Prévoir 4 places pour des générateurs; on aura un générateur de bruit, un oscillateur principal et deux oscillateurs secondaires par défaut (3 knobs/commutateurs par générateur sauf pour le générateur de bruit, qui n'a qu'un commutateur (ou un potentiomètre dans le cas d'un filtre à pente variable, ajustable par l'utilisateur - à voir)).
