@@ -97,4 +97,11 @@ Celle-ci se fera dans l'environnement Pyo (bien entendu!).  Je suivrai les étap
 
 7. Test et maintenance
 Je m'appliquerai à faire des tests à chaque ajout de composante ou de contrôle de paramètre, de manière à cibler plus rapidement les problèmes.
+
+Commentaires:
+
+Excellent!
+
+La première étape consiste définitivement à faire un programme, sans interface, qui permet de connecter les oscillateurs entre eux et de modifier les paramètres de chacun par des appels de méthode. À partir du moment où ceci fait exactement ce dont tu as besoin, tu peux commencer à implémenter les contrôles soit en MIDI, soit graphique. Les deux méthodes de contrôle devraient utiliser pratiquement les mêmes appels de méthode pour passer les données de contrôle (il y aura fort probablement des exceptions!). Travailles le plus modulaire possible, ça te permettra d'ajouter des composantes beaucoup plus facilement dans le futur...
+ 
 		
