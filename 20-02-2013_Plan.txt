@@ -2,31 +2,11 @@ Last update: Mercredi 20 février 2013
 
 Plan de la semaine: faire les classes de générateurs de sons.
 
-À faire: 3 classes distinctes
--Les classes d'oscillateurs sont créées; il reste à définir leurs méthodes (ex, changer d'octave ou de fréquence)
--Régler le bogue qui fait que l'onde sinusoïdale ne sort pas, contrairement aux autres.
+-Créer l'onde rectangulaire
+-Faire une classe pour recevoir une source externe?
+-Créer une méthode stop pour chaque classe (pour pouvoir arrêter les processus et sauver du CPU)
 
 ***La fréquence principale et le volume de chaque oscillateur devront être gérés à l'extérieur des objets oscillateurs!***
-
-1-PrincipalOsc (oscillateur principal servant de référence pour les deux autres)
-Classe parente: PyoObject
-Méthodes
--set.wave: forme d'onde (sine, triangular, sawtooth, square, rectangular) -> chiffres de 1 à 5
--set.main_freq: fréquence principale (l'objet aura une fréquence par défaut, mais la fréquence pourra être modifiée de l'extérieur)   *trouver la fréquence par défaut du Minimoog Voyager!
--set.finetune: ajustement fin de la fréquence de l'oscillateur (main_freq*2^(finetune/12)) - en demi-tons
--set.octave(osc seulement): octave (32 par défaut; multiplier par deux pour les autres - 16,8,4,2,1 --> assigner les exposants des puissances de deux au commutateur?)
-
-
-2-SecondaryOsc (oscillateurs secondaires dont la fréquence se base sur celle de l'oscillateur principal)
-Classe parente: PyoObject
-Méthodes: 
--set.wave(osc seulement): forme d'onde (sine, triangular, sawtooth, square, rectangular)
--set.main_freq: fréquence principale (l'objet aura une fréquence par défaut, mais la fréquence pourra être modifiée de l'extérieur)
--set.transpo(osc seulement): fréquence des oscillateurs secondaires (en fonction de la fréquence principale, déviation en demi-tons, de -7 à 7) --> main_freq*2^(sec_freq/12)
--set.octave(osc seulement): octave (32 par défaut; multiplier par deux pour les autres - 16,8,4,2,1 --> assigner les exposants des puissances de deux au commutateur?)
-
-3-Générateurs de bruit:
--set.noise(noise seulement): sorte de bruit (blanc ou rose)
 
 Interface graphique: grosse classe "MyFrame"!
 -Prévoir 4 places pour des générateurs; on aura un générateur de bruit, un oscillateur principal et deux oscillateurs secondaires par défaut (3 knobs/commutateurs par générateur sauf pour le générateur de bruit, qui n'a qu'un commutateur (ou un potentiomètre dans le cas d'un filtre à pente variable, ajustable par l'utilisateur - à voir)).
