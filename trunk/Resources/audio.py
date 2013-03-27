@@ -8,6 +8,8 @@ s = Server(duplex=1).boot()
 #un fichier son ou une source externe. Lors de la creation de l'interface graphique,
 #on pourra prevoir un bouton pour les controler.
 
+#Prevoir une commande Glide Rate qui permet de faire un portamento entre les frequences (a l'etape du controle MIDI?).
+
 class Oscillator():
     """Oscillator class. The oscillator is the first sound generator of the synthesizer. 
        
@@ -53,7 +55,19 @@ class Oscillator():
         rect_wave = LinTable(list=[(0,0.),(1,1),(127,1),(128,0),(1023,0),(1024,1),(1151,1),(1152,0),(2048,0)], size=2048)
         rectangle = Osc(table=rect_wave, freq=[freq,freq], mul=0.15)
 
+        #Attribut self.wave
         self.wave = wave
+        if wave == 1:
+            self.wave = sinus
+        elif wave == 2:
+            self.wave = triangle
+        elif wave == 3:
+            self.wave = sawtooth
+        elif wave == 4:
+            self.wave = square
+        elif wave == 5:
+            self.wave = rectangle
+        
         self.freq = freq
         
         self.transpo = transpo
@@ -66,17 +80,6 @@ class Oscillator():
         
         self.amp = amp
         
-        #Attribut self.wave
-        if wave == 1:
-            self.wave = sinus
-        elif wave == 2:
-            self.wave = triangle
-        elif wave == 3:
-            self.wave = sawtooth
-        elif wave == 4:
-            self.wave = square
-        elif wave == 5:
-            self.wave = rectangle
         self.mix = Mix(self.wave, voices=2, mul=self.amp)
         
     def out(self): 
@@ -100,16 +103,20 @@ class Oscillator():
         return self.wave
         
     def setFreq(self,x): #frequence de l'oscillateur principal, 130 Hz par defaut
-        self.freq = x    
+        self.freq = x
+        return self.freq    
        
     def setTranspo(self,x):
         self.transpo = x
+        return self.transpo
         
     def setOctave(self,x): #octave, 32 par defaut
         self.octave = x
+        return self.octave
         
     def setAmp(self,x):
         self.amp = x
+        return self.amp
         
         
 class NoiseGenerator():
@@ -146,12 +153,81 @@ class NoiseGenerator():
         
     def setAmp(self,x):
         self.amp = x
+        return self.amp
 
     def setType(self,x):
         self.type = x
-
-#test = Oscillator(wave=5).out()
-#test2 = NoiseGenerator(type=2).out()
-
+        return self.type
+        
+class Filter(): #Voir si un panning individuel pour chaque filtre est possible (surement!).
+#Voir pourquoi on me dit que l'objet Filter n'a pas d'attribut out.
+#Ajouter les attributs et methodes pour pouvoir lire l'enveloppe ADSR modulant la frequence de coupure (Amount to Filter).
     
+    def __init__(self, input, mode=1, cutoff=5000, spacing=0, resonance=5):
+        self.mode = mode
+        self.input = input
+        self.cutoff = cutoff
+        self.spacing = spacing #Entre -2 et 2. Indique le nombre d'octaves entre les deux frequences de coupure.
+        
+        self.freq1 = cutoff - (cutoff*pow(2,spacing))
+        self.freq2 = cutoff + (cutoff*pow(2,spacing))
+        self.resonance = resonance
+        self.q = resonance*50 + 1 #Resonance se situant entre 0 et 10, on vise un facteur Q entre 1 et 500.
+        
+        if mode == 1: # dual lowpass
+            self.filter1 = Biquadx(self.input, freq=self.freq1, q=self.q, type=0, stages=4, mul=0.6, add=0)
+            self.filter2 = Biquadx(self.input, freq=self.freq2, q=self.q, type=0, stages=4, mul=0.6, add=0)
+        elif mode == 2: #lowpass/highpass
+            self.filter1 = Biquadx(self.input, freq=self.freq1, q=self.q, type=0, stages=4, mul=0.6, add=0)
+            self.filter2 = Biquadx(self.input, freq=self.freq2, q=self.q, type=0, stages=4, mul=0.6, add=0)
+        
+        self.mix = Mixer(mul=0.8)
+        self.mix.addInput(1,self.filter1)
+        self.mix.addInput(2,self.filter2)
+        
+        def out(self): #Envoie le son aux haut-parleurs et retourne l'objet lui-meme
+            self.mix.out()
+            return self
+
+        def stop(self):
+            self.mix.stop()
+            return self
+
+        def play(self):
+            self.mix.play()
+            return self
+
+        def getOut(self): #retourne l'objet generant du son afin de l'inclure dans une chaine de traitement
+            return self.mix
+            
+        def setMode(self,x):
+            self.mode = x
+            return self.mode
+            
+        def sefInput(self,input):
+            self.input = input
+            return self.input
+            
+        def setCutoff(self,x):
+            self.cutoff = x
+            return self.cutoff
+        
+        def setSpacing(self,x):
+            self.spacing = x
+            return self.spacing
+            
+        def setResonance(self,x):
+            self.resonance = x
+            return self.resonance 
+            
+
+class ADSR():
+    
+    def __init__(self, ):
+        
+
+#sinus = Sine(freq=442, mul=0.8)
+#src = Oscillator(wave=1)
+#filtre = Filter(sinus).out()
+#test2 = NoiseGenerator(type=2).out()
 s.gui(locals())
