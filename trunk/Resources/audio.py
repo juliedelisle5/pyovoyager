@@ -2,7 +2,7 @@ from pyo import *
 from random import uniform
 from math import pow
 
-#s = Server().boot()
+s = Server().boot()
 
 """
 A faire prochainement:
@@ -13,13 +13,16 @@ A faire prochainement:
 -Commande Glide Rate qui permet de faire un portamento entre les frequences.
 -Prevoir l'option SfPlayer/External Input pour une source sonore supplementaire.
 
--Completer la classe filtre et faire en sorte que les parametres se modifient par des appels de methode
 -Prevoir plusieurs options de pan pour les filtres: un filtre de chaque cote, ou les 2 filtres repartis entre les 2 cotes.
 -Creer une classe ADSR
 -Faire en sorte que l'amplitude de sortie et la frequence de coupure des filtres puisse etre controlee
  par une enveloppe ADSR ; declenchement des sons par un trig. *Tenir compte du parametre "amount to filter".
  
 -Generer des formes d'onde intermediaires a partir des formes d'onde de base. Modifier le dictionnaire en consequence.
+
+-Modifier les methodes setParametre et utiliser l'autre facon de faire avec des @
+
+-Eventuellement, faire heriter ces objets de la classe parente PyoObject (assez complique et pas prioritaire)
 """
 #On pourra aussi brancher un SfPlayer ou un Input pour respectivement utiliser
 #un fichier son ou une source externe. Lors de la creation de l'interface graphique,
@@ -48,10 +51,10 @@ class Oscillator(): #Utiliser la methode getFreq pour la synthese FM
         -setAmp(): sets the amplitude parameter (amp) """
     
     def __init__(self, wave=1, freq=130., transpo=0., octave=1., lfo=0., amp=0.3):
-        
-        self.transpo = Sig(value=(pow(2.0,(transpo/12.0))), mul=[1.,1.]) 
+        #PyoObject.__init__(self) (si on rajoute la classe parente. La donner en argument a la classe egalement)
+        self.transpo = Sig(value=(Pow(base=2.0, exponent=(transpo/12.0), mul=1.)), mul=[1.,1.]) 
         self.octave = Sig(octave, mul=[1.,1.]) #En realite, la valeur de self.octave sera comprise entre 1 et 6 (valeurs discretes en float).
-        self.lfo = Sig(value=(pow(2.0,(lfo*4.))), mul=[1.,1.]) #LFO: 0 pour mode normal, 1 pour mode LFO.
+        self.lfo = Sig(value=(Pow(base=2.0, exponent=(lfo*4.), mul=1.)), mul=[1.,1.]) #LFO: 0 pour mode normal, 1 pour mode LFO.
         self.amp = Sig(amp, mul=[1.,1.])
         self.freq = Sig(freq*self.octave*self.transpo/self.lfo, mul=[1.,1.])
         
@@ -104,13 +107,13 @@ class Oscillator(): #Utiliser la methode getFreq pour la synthese FM
         self.freq.value = x   
        
     def setTranspo(self,x): # a changer pour faire le calcul direct
-        self.transpo.value = pow(2.0,(x/12.0))
+        self.transpo.value = Pow(base=2.0,exponent=(x/12.0), mul=1.)
         
     def setOctave(self,x): #octave, 32 par defaut (note la plus grave)
         self.octave.value = x
         
     def setLFO(self,x):
-        self.lfo.value = pow(2.0,(x*4.))
+        self.lfo.value = Pow(base=2.0, exponent=(x*4.), mul=1.)
         
     def setAmp(self,x):
         self.amp.value = x
@@ -157,68 +160,84 @@ class NoiseGenerator():
         self.noise.value = noise_dict[x]
         
         
-class Filter(): #Classe incomplete pour le moment: il faut modifier les attributs et les methodes pour les changements en temps reel.
+class Filter():
     
-    def __init__(self, input, mode=1, cutoff=5000, spacing=0, resonance=5):
-        self.mode = mode
-        self.input = input
-        self.cutoff = cutoff
-        self.spacing = spacing #Entre -2 et 2. Indique le nombre d'octaves entre les deux frequences de coupure.
+    def __init__(self, input, filter_mode=1, cutoff=500., spacing=0., resonance=1., pan_mode=1, amp=0.8):
+        self.filter_mode = Sig(value=filter_mode, mul=[1.,1.])
+        self.input = Sig(value=input, mul=[1.,1.])  #L'input sera eventuellement le Mixer qui rassemblera toutes les voix des oscillateurs.
+        #Probleme : l'input doit etre un PyoObject. Faudra que l'objet de la classe du mixeur en soit un.
+        self.cutoff = Sig(value=cutoff, mul=[1.,1.])
+        self.spacing = Sig(value=spacing, mul=[1.,1.]) #Entre -2 et 2 (float). Indique le nombre d'octaves entre les deux frequences de coupure.
         
-        self.freq1 = cutoff - (cutoff*pow(2,spacing))
-        self.freq2 = cutoff + (cutoff*pow(2,spacing))
-        self.resonance = resonance
-        self.q = resonance*50 + 1 #Resonance se situant entre 0 et 10, on vise un facteur Q entre 1 et 500.
-        
-        if mode == 1: # dual lowpass
-            self.filter1 = Biquadx(self.input, freq=self.freq1, q=self.q, type=0, stages=4, mul=0.6, add=0)
-            self.filter2 = Biquadx(self.input, freq=self.freq2, q=self.q, type=0, stages=4, mul=0.6, add=0)
-        elif mode == 2: #lowpass/highpass
-            self.filter1 = Biquadx(self.input, freq=self.freq1, q=self.q, type=0, stages=4, mul=0.6, add=0)
-            self.filter2 = Biquadx(self.input, freq=self.freq2, q=self.q, type=0, stages=4, mul=0.6, add=0)
-        
-        self.mix = Mixer(mul=0.8)
-        self.mix.addInput(1,self.filter1)
-        self.mix.addInput(2,self.filter2)
-        
-        def out(self): #Envoie le son aux haut-parleurs et retourne l'objet lui-meme
-            self.mix.out()
-            return self
+        self.freq1 = Sig(value=(self.cutoff - (self.cutoff*Pow(base=2.,exponent=self.spacing, mul=1.))), mul=[1.,1.])
+        self.freq2 = Sig(value=(self.cutoff + (self.cutoff*Pow(2.,exponent=self.spacing, mul=1.))), mul=[1.,1.])
+        self.resonance = Sig(value=resonance, mul=[1.,1.])
+        self.q = Sig(value=(self.resonance*49.9 + 1.), mul=[1.,1.]) #Resonance se situant entre 0 et 10, on vise un facteur Q entre 1 et 500.
 
-        def stop(self):
-            self.mix.stop()
-            return self
-
-        def play(self):
-            self.mix.play()
-            return self
-
-        def getOut(self): #retourne l'objet generant du son afin de l'inclure dans une chaine de traitement
-            return self.mix
-            
-        def setMode(self,x):
-            self.mode = x
-            return self.mode
-            
-        def sefInput(self,input):
-            self.input = input
-            return self.input
-            
-        def setCutoff(self,x):
-            self.cutoff = x
-            return self.cutoff
+        if filter_mode == 1: # dual lowpass
+            self.filter1 = Biquadx(self.input, freq=self.freq1, q=self.q, type=0, stages=2, mul=0.6, add=0)
+            self.filter2 = Biquadx(self.input, freq=self.freq2, q=self.q, type=0, stages=2, mul=0.6, add=0)
+        elif filter_mode == 2: #lowpass/highpass
+            self.filter1 = Biquadx(self.input, freq=self.freq1, q=self.q, type=0, stages=2, mul=0.6, add=0)
+            self.filter2 = Biquadx(self.input, freq=self.freq2, q=self.q, type=0, stages=2, mul=0.6, add=0)
         
-        def setSpacing(self,x):
-            self.spacing = x
-            return self.spacing
+        pan_dict1 = {1:0.5, 2:0., 3:1., 4:0.} #1=50% de chaque cote; 2=filtre 1 a gauche, filtre 2 a droite
+        pan_dict2 = {1:0.5, 2:1., 3:0., 4:0.} #3=filtre 1 a droite, filtre 2 a gauche, 4=mono (gauche)
+        self.pan1 = Sig(value=pan_dict1[pan_mode], mul=[1,1])
+        self.pan2 = Sig(value=pan_dict2[pan_mode], mul=[1,1])
+        self.amp = Sig(value=amp, mul=[1,1])
+        self.filter1_pan = Pan(input=self.filter1, outs=2, pan=self.pan1, spread=1., mul=self.amp)
+        self.filter2_pan = Pan(input=self.filter2, outs=2, pan=self.pan2, spread=1., mul=self.amp)
+        self.in_fader = InputFader(self.input)
+        
+    def setInput(self, x, fadetime=0.05):
+        self.input.value = x
+        self.in_fader.setInput(x, fadetime)
+    
+    def out(self): #Envoie le son aux haut-parleurs et retourne l'objet lui-meme
+        self.filter1_pan.out()
+        self.filter2_pan.out()
+        return self
+
+    def stop(self):
+        self.filter1_pan.stop()
+        self.filter2_pan.stop()
+        return self
+
+    def play(self):
+        self.filter1_pan.play()
+        self.filter2_pan.play()
+        return self
+        
+    def setFilter_mode(self,x):
+        self.filter_mode.value = x
+        
+    def setCutoff(self,x):
+        self.cutoff.value = x
+        
+    def setSpacing(self,x):
+        self.spacing.value = x
             
-        def setResonance(self,x):
-            self.resonance = x
-            return self.resonance 
+    def setResonance(self,x):
+        self.resonance.value = x
+    
+    def setPan_mode(self,x):
+        pan_dict1 = {1:0.5, 2:0., 3:1., 4:0.} #1=50% de chaque cote; 2=filtre 1 a gauche, filtre 2 a droite
+        pan_dict2 = {1:0.5, 2:1., 3:0., 4:0.} #3=filtre 1 a droite, filtre 2 a gauche, 4=mono (gauche)
+        self.pan1.value = pan_dict1[x]
+        self.pan2.value = pan_dict2[x]
+        #self.filter1_pan.pan.value = pan_dict1[x]
+        #self.filter2_pan.pan.value = pan_dict2[x]
+    
+    def setAmp(self,x):
+        self.amp.value = x
         
 
-#sinus = Sine(freq=442, mul=0.8)
-#src = Oscillator(wave=2,octave=2., lfo=0.).out()
-#filtre = Filter(sinus).out()
-#test2 = NoiseGenerator(noise=2).out()
-#s.gui(locals())
+src1 = Oscillator(wave=2,octave=1., lfo=0.)
+src2 = Oscillator(wave=4,octave=2, lfo=0.)
+bruit = NoiseGenerator()
+filtre = Filter(src1.getOut()).out()
+
+#test2 = NoiseGenerator(noise=2)
+noise = Noise()
+s.gui(locals())
