@@ -2,6 +2,16 @@ from pyo import *
 from random import uniform
 from math import pow
 
+### Tres bien! En priorite selon moi:
+### 1 - Faire les connections entre les oscillateurs
+### 2 - Le controle des notes en midi
+### 
+### Le tout peut etre controle en argument et en appels de methode
+### Ce qui rend l'interface graphique secondaire (du moins pour le 
+### projet dans le cadre du cours!)
+### 19/20
+
+
 s = Server().boot()
 
 """
@@ -58,6 +68,12 @@ class Oscillator(): #Utiliser la methode getFreq pour la synthese FM
         self.amp = Sig(amp, mul=[1.,1.])
         self.freq = Sig(freq*self.octave*self.transpo/self.lfo, mul=[1.,1.])
         
+        ### Tous les oscillateurs devraient etre a .stop() dans l'__init__, sauf la wave choisie.
+        ### Dans la methode setWave, tu pourrais allumer celle choisie et eteindre l'ancienne.
+        ### Economie de CPU (surtout qu'il y a plusieurs oscillateurs) (voir setWave)
+        ### Garde la wave courante en memoire
+        self.last_wave = wave
+
         #1-Onde sinusoidale enrichie par un petit chorus
         sinus_freq = []
         for i in range(6):
@@ -101,7 +117,16 @@ class Oscillator(): #Utiliser la methode getFreq pour la synthese FM
         
     def setWave(self,x):
         wave_dict = {1:self.sinus, 2:self.triangle, 3:self.sawtooth, 4:self.square, 5:self.rectangle}
+        ### stop l'ancienne
+        wave_dict[self.last_wave].stop()
+        ### demarre la nouvelle
+        wave_dict[x].play()
+        
         self.wave.value = wave_dict[x]
+        
+        ### remplace la reference a la wave courante
+        self.last_wave = x
+
         
     def setFreq(self,x): #frequence de l'oscillateur principal, 130 Hz par defaut
         self.freq.value = x   
@@ -125,6 +150,7 @@ class NoiseGenerator():
         
         self.amp = Sig(amp, mul=[1.,1.])
         
+        ### Meme chose que pour les waves (stop pour tous sauf le bruit qui joue).
         #bruit blanc
         self.white = Noise(mul=[0.15,0.15])
         #bruit rose
@@ -185,9 +211,14 @@ class Filter():
         pan_dict2 = {1:0.5, 2:1., 3:0., 4:0.} #3=filtre 1 a droite, filtre 2 a gauche, 4=mono (gauche)
         self.pan1 = Sig(value=pan_dict1[pan_mode], mul=[1,1])
         self.pan2 = Sig(value=pan_dict2[pan_mode], mul=[1,1])
+        ### Un petit portamento sur les pans serait surement profitable. (soit en utilisant des SigTo ou en passant 
+        ### par un objet Port).
         self.amp = Sig(value=amp, mul=[1,1])
         self.filter1_pan = Pan(input=self.filter1, outs=2, pan=self.pan1, spread=1., mul=self.amp)
         self.filter2_pan = Pan(input=self.filter2, outs=2, pan=self.pan2, spread=1., mul=self.amp)
+        
+        ### L'InputFader devrait etre au debut de la classe et recevoir directement l'arguement "input".
+        ### Il pourrait remplacer l'objet Sig en self.input...
         self.in_fader = InputFader(self.input)
         
     def setInput(self, x, fadetime=0.05):
