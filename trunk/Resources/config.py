@@ -1,6 +1,8 @@
 from pyo import *
 from audio import *
 
+### Ce fichier devrait plutot s'appeler test.py! 
+
 s = Server().boot()
 
 osc1 = Oscillator(wave=1).out()
