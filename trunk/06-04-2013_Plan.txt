@@ -1,0 +1,28 @@
+Plan de travail pour Pyovoyager
+
+A faire prochainement:
+À tester:
+-voir si le q du filtre change quand on change le paramètre résonance (voir si le calcul se refait
+et si la valeur se met à jour automatiquement).
+-Appels de méthode pour la classe filtre :
+    out
+    setMode
+    setCutoff
+    setSpacing
+    setResonance (voir point précédent)
+
+-Filter instance has no attribute out - Pourquoi ?!?
+X-Utiliser un objet Pow (audio) pour gérer les calculs dans la classe Oscillators
+-Prevoir plusieurs options de pan pour les filtres: un filtre de chaque cote, ou les 2 filtres repartis entre les 2 cotes.
+-Creer une classe ADSR
+-Faire en sorte que l'amplitude de sortie et la frequence de coupure des filtres puisse etre controlee
+ par une enveloppe ADSR ; declenchement des sons par un trig. *Tenir compte du parametre "amount to filter".
+ 
+-Generer des formes d'onde intermediaires a partir des formes d'onde de base. Modifier le dictionnaire en consequence.
+-Classe pour le mixeur qui recevra les differentes combinaisons d'oscillateurs et de generateurs de bruit.
+-Osc 1-2 sync : avec un objet OscTrig et un objet Metro qui est regle a la vitesse de l'oscillateur 1.
+-Osc 3-1 FM : calculer le rapport modulante/porteuse et faire la transition osc3.amp-->frequence en Hertz
+-Commande Glide Rate qui permet de faire un portamento entre les frequences.
+-Prevoir l'option SfPlayer/External Input pour une source sonore supplementaire.
+
+
