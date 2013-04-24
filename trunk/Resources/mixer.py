@@ -5,43 +5,55 @@ from audio import *
 #un fichier son ou une source externe. Lors de la creation de l'interface graphique,
 #on pourra prevoir un bouton pour les controler.
 
-#Utiliser la methode getFreq pour la synthese FM
-s = Server().boot()
+#Synthese FM: j'obtiens un signal unipolaire. Trouver le bogue.
 
 class MixerSection():
     def __init__(self, ref_freq, finetune):
         self.ref_freq = Sig(value=ref_freq)
-        self.fine_tune = Sig(value=ref_freq)
+        self.fine_tune = Sig(value=finetune)
         
-        self.wave1 = 1 #Sinusoidale par defaut
-        self.freq1 = Sig(value=ref_freq*(Pow(base=2.0, exponent=(finetune/12.0), mul=1.))) #controle avec le finetune, +ou- 2 demi-tons par rapport a la frequence de reference
-        self.octave1 = 1. #Verifier s'il ya un conflit avec freq1 et la frequence de l'objet oscillator.
-        self.amp1 = 0.7
+        self.wave1 = Sig(value=0.) #Sinusoidale par defaut
+        self.freq1 = ref_freq*(Pow(base=2.0, exponent=(self.fine_tune/12.0), mul=1.))#controle avec le fine_tune, +ou- 2 demi-tons par rapport a la frequence de reference
+        self.octave1 = Sig(value=1.) #Verifier s'il ya un conflit avec freq1 et la frequence de l'objet oscillator.
+        self.amp1 = Sig(value=0.4)
         
-        self.wave2 = 1 #Valeurs par defaut, a changer par des appels de methode
+        self.wave2 = Sig(value=0.) #Valeurs par defaut, a changer par des appels de methode
         self.freq2 = self.freq1
-        self.transpo2 = 0.
-        self.octave2 = 1.
-        self.amp2 = 0.7
+        self.transpo2 = Sig(value=0.)
+        self.octave2 = Sig(value=1.)
+        self.amp2 = Sig(value=0.4)
         
-        self.wave3 = 1 #Valeurs par defaut, a changer par des appels de methode
+        self.wave3 = Sig(value=0.) #Valeurs par defaut, a changer par des appels de methode
         self.freq3 = self.freq1
-        self.transpo3 = 0.
-        self.octave3 = 1.
-        self.lfo3 = 0.
-        self.amp3 = 0.7
+        self.transpo3 = Sig(value=0.)
+        self.octave3 = Sig(value=1.)
+        self.lfo3 = Sig(value=0.)
+        self.amp3 = Sig(value=0.4)
         
-        self.noise_type = 1.
-        self.noise_amp = 0.6
+        self.noise_type = 1 #Seulement pour la valeur par defaut.
+        self.noise_amp = Sig(value=0.3)
         
         #self.external = a rajouter eventuellement avec ses attributs.
         
         self.osc1 = Oscillator(wave=self.wave1, freq=self.freq1, transpo=0., octave=self.octave1, lfo=0., amp=self.amp1).stop()
         self.osc2 = Oscillator(wave=self.wave2, freq=self.freq2, transpo=self.transpo2, octave=self.octave2, lfo=0., amp=self.amp2).stop()
         self.osc3 = Oscillator(wave=self.wave3, freq=self.freq3, transpo=self.transpo3, octave=self.octave3, lfo=self.lfo3, amp=self.amp3).stop()
-        self.noise = NoiseGenerator(noise=self.noise_type, amp=self.amp).stop()
+        self.noise = NoiseGenerator(noise=self.noise_type, amp=self.noise_amp).stop()
         
-        self.inputs = [self.osc1.getOut(), self.osc2.getOut(), self.osc3.getOut(), self.noise.getOut()] #ajouter external et sfplayer s'il y a lieu
+        #Pour la synthese FM
+        self.ratio = Sig(value=(self.osc3.freq/self.osc1.freq))
+        self.index = Sig(self.osc3.amp*20.)
+        self.mod_osc = Osc(table=self.osc3.newTable, freq=self.freq1*self.ratio, mul=0.5).stop()
+        self.port_phasor_freq = self.mod_osc*self.freq1*self.ratio*self.index
+        self.port_phasor = Phasor(freq=self.port_phasor_freq+self.freq1).stop()
+        self.fm = Osc(table=self.osc1.newTable, freq=self.port_phasor_freq, add=-0.5).stop()
+        
+        #Pour le Sync 1-2
+        self.metro = Metro(time=1/self.freq1).stop()
+        self.osc2Aux = OscTrig(table=self.osc2.newTable, trig=self.metro, freq=self.osc2.freq, mul=0.5).stop()
+        
+        #Signal de sortie
+        self.inputs = [self.osc1.getOut(), self.osc2.getOut(), self.osc3.getOut(), self.noise.getOut(), self.fm, self.osc2Aux] #ajouter external et sfplayer s'il y a lieu
         self.mix = Mix(input=self.inputs, voices=1, mul=.8)
     
     #Methodes generales (out, getOut, stop, play)
@@ -61,6 +73,8 @@ class MixerSection():
         return self
         
     #Methodes pour les parametres des oscillateurs et du generateur de bruit
+    #Refaire et remplacer tous les Sig par des valeurs par defaut, et les self.attribut.value par des
+    #  appels de methodes parlant directement a l'objet generateur concerne?
     def setRefFreq(self,x):
         self.ref_freq.value = x
         
@@ -68,48 +82,50 @@ class MixerSection():
         self.fine_tune.value = x
         
     def setWave1(self,x):
-        self.wave1 = x
+        self.wave1.value = x
         
     def setOctave1(self,x):
-        self.octave1 = x
+        self.octave1.value = x
         
     def setAmp1(self,x):
-        self.amp1 = x
+        self.amp1.value = x
         
     def setWave2(self,x):
-        self.wave2 = x
+        self.wave2.value = x
         
     def setTranspo2(self,x):
-        self.transpo2 = x
+        self.transpo2.value = x
         
     def setOctave2(self,x):
-        self.octave2 = x
+        self.octave2.value = x
         
     def setAmp2(self, x):
-        self.amp2 = x
+        self.amp2.value = x
 
     def setWave3(self,x):
-        self.wave3 = x
+        self.wave3.value = x
 
     def setTranspo3(self,x):
-        self.transpo3 = x
+        self.transpo3.value = x
 
     def setOctave3(self,x):
-        self.octave3 = x
+        self.octave3.value = x
 
     def setLFO3Mode(self,x):
-        self.lfo3 = x
+        self.lfo3.value = x
         
     def setAmp3(self, x):
-        self.amp3 = x
+        self.amp3.value = x
         
     def setNoiseType(self,x):
-        self.noise_type = x
+        self.noise.setNoise(x)
+        #self.noise_type = x
         
     def setNoiseAmp(self,x):
-        self.noise_amp = x
-        
-    #Methodes on/off pour les oscillateurs et le generateur
+        self.noise_amp.value = x
+    
+    #Methodes on/off pour les oscillateurs et le generateur:    
+    
     #A ajouter au moment de l'ajout de l'option source externe.  A copier si on ajoute aussi un SfPlayer
     #def externalOn(self):
         #self.external.play()
@@ -151,7 +167,36 @@ class MixerSection():
         self.osc2.freq_interp.risetime = 0.05
         self.osc3.freq_interp.risetime = 0.05
         
+    #Synthese FM (3-1 FM)
+    def synthFMOn(self):
+        self.osc1Off()
+        self.osc3Off()
+        self.mod_osc.play()
+        self.port_phasor.play()
+        self.fm.play()
         
-mix = MixerSection(130.,0.).out()
-s.gui(locals())
+    def synthFMOff(self):
+        self.fm.stop()
+        self.port_phasor.stop()
+        self.mod_osc.stop()
+        self.osc1On()
+        self.osc3On()
+        
+    #Sync 1-2
+    def sync12On(self):
+        self.osc2Off()
+        self.osc1On()
+        self.metro.play()
+        self.osc2Aux.play()
+        
+    def sync12Off(self):
+        self.osc2Aux.stop()
+        self.metro.stop()
+        self.self.osc2On()
+
+
+if __name__ == '__main__':
+    s = Server().boot()
+    mix = MixerSection(130.,0.).out()
+    s.gui(locals())
         

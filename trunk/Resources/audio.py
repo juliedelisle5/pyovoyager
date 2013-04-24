@@ -2,7 +2,9 @@ from pyo import *
 from random import uniform
 from math import pow
 
+#Mettre l'attribut wave a une valeur entre 0 et 1 (float) par defaut et essayer ensuite avec les tables.
 
+#Premiere evaluation:
 ### Tres bien! En priorite selon moi:
 ### 1 - Faire les connections entre les oscillateurs
 ### 2 - Le controle des notes en midi
@@ -13,7 +15,6 @@ from math import pow
 ### 19/20
 
 
-s = Server().boot()
 
 """
 A faire prochainement:
@@ -57,44 +58,37 @@ class Oscillator():
         -setLFO(): sets the LFO mode : 0.=normal, 1.=LFO (4 octaves below the principal frequency)
         -setAmp(): sets the amplitude parameter (amp) """
     
-    def __init__(self, wave=1, freq=130., transpo=0., octave=1., lfo=0., glide=0.05, amp=0.3):
+    def __init__(self, wave=0., freq=130., transpo=0., octave=1., lfo=0., glide=0.05, amp=0.2):
         self.transpo = Sig(value=(Pow(base=2.0, exponent=(transpo/12.0), mul=1.))) 
         self.octave = Sig(octave) #En realite, la valeur de self.octave sera comprise entre 1 et 6 (valeurs discretes en float).
         self.lfo = Sig(value=(Pow(base=2.0, exponent=(lfo*4.), mul=1.))) #LFO: 0 pour mode normal, 1 pour mode LFO.
         self.amp = Sig(amp)
         self.freq = Sig(value=freq*self.octave*self.transpo/self.lfo)
         self.glide = glide
-        self.freq_interp = Port(input=self.freq, risetime = self.glide) #J'ai change tous les self.freq pour self.freq_interp. A tester.
-        self.last_wave = wave
+        self.freq_interp = Port(input=self.freq, risetime = self.glide)
         
-        #Dictionnaire d'amplitudes pour les formes d'ondes; lecture de tables pour toutes les formes (pour 1-2 Sync)
-
-        #1-Onde sinusoidale enrichie par un petit chorus
-        sinus_freq = []
-        for i in range(6):
-            sinus_freq.append(self.freq_interp*random.uniform(1.00001,1.00003))
-        self.sinus = Sine(freq = sinus_freq, mul=0.07).stop()
+        #1-Onde sinusoidale creee a l'aide d'une HannTable
+        self.sine_wave = HarmTable(size=2048)
         
         #2-Onde triangulaire
-        triangle_wave = LinTable(list=[(0,0.),(512,1.),(1024,0.),(1536,-1.),(2047,0)], size=2048)
-        self.triangle = Osc(table=triangle_wave, freq=self.freq_interp, mul=0.15).stop()
+        self.triangle_wave = LinTable(list=[(0,0.),(512,1.),(1024,0.),(1536,-1.),(2047,0)], size=2048)
         
         #3-Onde en dents de scie
-        saw_wave = SawTable(order=30)
-        self.sawtooth = Osc(table=saw_wave, freq=self.freq_interp, mul=0.1).stop()
+        self.saw_wave = SawTable(order=30)
         
         #4-onde carree standard
-        square_wave = SquareTable(order=30)
-        self.square = Osc(table=square_wave, freq=self.freq_interp, mul=0.15).stop()
+        self.square_wave = SquareTable(order=30)
         
         #5-Onde rectangulaire
-        rect_wave = LinTable(list=[(0,0.),(1,1),(127,1),(128,0),(1023,0),(1024,1),(1151,1),(1152,0),(2048,0)], size=2048)
-        self.rectangle = Osc(table=rect_wave, freq=self.freq_interp, mul=0.15).stop()
+        self.rect_wave = LinTable(list=[(0,0.),(1,1),(127,1),(128,0),(1023,0),(1152,0),(2048,0)], size=2048) #(1024,1),(1151,1),-->donne l'octave
         
-        wave_dict = {1:self.sinus, 2:self.triangle, 3:self.sawtooth, 4:self.square, 5:self.rectangle}
-        wave_dict[wave].play()
-        self.wave = Sig(wave_dict[wave]) #Sig(wave, mul=[1,1])
-        self.mix = Mix(self.wave, voices=2, mul=self.amp)
+        self.wave = Sig(value=wave) #Sine(.1, mul=.5, add=.5) #Attribut de l'objet, valeur en float entre 0. et 1.
+        self.newTable = NewTable(length=2048./44100., chnls=1)
+        self.table = TableMorph(input=self.wave, table=self.newTable, sources=[self.sine_wave, self.triangle_wave, self.saw_wave, self.square_wave, self.rect_wave]) #
+        #self.newTable.view()
+        self.osc = Osc(table=self.newTable, freq=self.freq_interp, mul=0.2).play()
+        
+        self.mix = Mix(self.osc, voices=2, mul=self.amp)
         
     def out(self): 
         self.mix.out()
@@ -111,16 +105,8 @@ class Oscillator():
     def getOut(self):
         return self.mix
         
-    def setWave(self,x):
-        wave_dict = {1:self.sinus, 2:self.triangle, 3:self.sawtooth, 4:self.square, 5:self.rectangle}
-        ### stop l'ancienne
-        wave_dict[self.last_wave].stop()
-        ### demarre la nouvelle
-        wave_dict[x].play()
-        self.wave.value = wave_dict[x]
-        ### remplace la reference a la wave courante
-        self.last_wave = x
-
+    def setWave(self,x): #A ajuster
+        self.wave.value = x
         
     def setFreq(self,x): #frequence de l'oscillateur principal, 130 Hz par defaut
         self.freq.value = x   
@@ -148,7 +134,6 @@ class NoiseGenerator():
         self.amp = Sig(amp)
         self.last_noise = noise
         
-        ### Meme chose que pour les waves (stop pour tous sauf le bruit qui joue).  ---> ok
         #bruit blanc
         self.white = Noise(mul=[0.15,0.15]).stop()
         #bruit rose
@@ -157,7 +142,7 @@ class NoiseGenerator():
         self.brown = BrownNoise(mul=[0.2,0.2]).stop()
             
         noise_dict = {1:self.white, 2:self.pink, 3:self.brown}
-        noise_dict[noise].play()
+        noise_dict[noise].play() #Appel du generateur de bruit choisi
         self.noise = Sig(noise_dict[noise])
             
         self.mix = Mix(self.noise, voices=2, mul=self.amp)
@@ -188,7 +173,7 @@ class NoiseGenerator():
         self.last_noise = x
 
         
-class Filter(): #Le changement d'input fait planter le programme.
+class Filter(): #Le changement d'input fait planter le programme. (Il ne devrait pas y en avoir de toute facon, mais on ne sait jamais.)
     
     def __init__(self, input, filter_mode=1, cutoff=500., spacing=0, resonance=1., pan_mode=1, amp=0.8):
         self.filter_mode = Sig(value=filter_mode)
@@ -201,7 +186,7 @@ class Filter(): #Le changement d'input fait planter le programme.
         self.freq1 = Sig(value=(self.cutoff*Pow(base=2.,exponent=-1.*self.spacing))) #a repenser
         self.freq2 = Sig(value=(self.cutoff*Pow(base=2.,exponent=self.spacing)))
         self.resonance = Sig(value=resonance)
-        self.q = Sig(value=(self.resonance*49.9 + 1.)) #Resonance se situant entre 0 et 10, on vise un facteur Q entre 1 et 500.
+        self.q = Sig(value=(self.resonance*4.99 + 1.)) #Resonance se situant entre 0 et 10, on vise un facteur Q entre 1 et 500.
 
         if filter_mode == 1: # dual lowpass
             self.filter1 = Biquadx(self.in_fader, freq=self.freq1, q=self.q, type=0, stages=2, mul=0.6, add=0) #self.in_fader
@@ -214,14 +199,12 @@ class Filter(): #Le changement d'input fait planter le programme.
         pan_dict2 = {1:0.5, 2:1., 3:0., 4:0.} #3=filtre 1 a droite, filtre 2 a gauche, 4=mono (gauche)
         self.pan1 = SigTo(value=pan_dict1[pan_mode])
         self.pan2 = SigTo(value=pan_dict2[pan_mode])
-        ### Un petit portamento sur les pans serait surement profitable. (soit en utilisant des SigTo ou en passant 
-        ### par un objet Port). ---> ok
         self.amp = Sig(value=amp)
         self.filter1_pan = SPan(input=self.filter1.mix(1), outs=2, pan=self.pan1, mul=self.amp)
         self.filter2_pan = SPan(input=self.filter2.mix(1), outs=2, pan=self.pan2, mul=self.amp)
         
         ### L'InputFader devrait etre au debut de la classe et recevoir directement l'arguement "input".
-        ### Il pourrait remplacer l'objet Sig en self.input...
+        ### Il pourrait remplacer l'objet Sig en self.input... ---> Cause un bogue. A regler!
         
         
     def setInput(self, x, fadetime=0.05):
@@ -265,13 +248,12 @@ class Filter(): #Le changement d'input fait planter le programme.
         self.amp.value = x
 #Fin de la classe filtre
 
+if __name__ == '__main__':
+    s = Server().boot()
+    
+    src1 = Oscillator(wave=1.,octave=1., lfo=0.).play()
+    src2 = Oscillator(wave=1.,octave=2., lfo=0.).stop()
+    bruit = NoiseGenerator().stop()
+    filtre = Filter(src1.getOut(), amp=0.1).out()
 
-src1 = Oscillator(wave=2,octave=1., lfo=0.).play()
-src2 = Oscillator(wave=4,octave=2, lfo=0.).stop()
-bruit = NoiseGenerator().stop()
-#filtre = Filter(src1.getOut()).out()
-
-
-#test2 = NoiseGenerator(noise=2)
-#noise = Noise()
-s.gui(locals())
+    s.gui(locals())
