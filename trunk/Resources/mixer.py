@@ -1,14 +1,11 @@
 from pyo import *
 from random import uniform
 from audio import *
-#On pourra aussi brancher un SfPlayer ou un Input pour respectivement utiliser
-#un fichier son ou une source externe. Lors de la creation de l'interface graphique,
-#on pourra prevoir un bouton pour les controler.
 
 #Synthese FM: j'obtiens un signal unipolaire. Trouver le bogue.
 
 class MixerSection():
-    def __init__(self, ref_freq, finetune):
+    def __init__(self, ref_freq=130., finetune=0., mul=0.8):
         self.ref_freq = Sig(value=ref_freq)
         self.fine_tune = Sig(value=finetune)
         
@@ -17,13 +14,13 @@ class MixerSection():
         self.octave1 = Sig(value=1.) #Verifier s'il ya un conflit avec freq1 et la frequence de l'objet oscillator.
         self.amp1 = Sig(value=0.4)
         
-        self.wave2 = Sig(value=0.) #Valeurs par defaut, a changer par des appels de methode
+        self.wave2 = Sig(value=0.) #Valeurs par defaut a changer par des appels de methode
         self.freq2 = self.freq1
         self.transpo2 = Sig(value=0.)
         self.octave2 = Sig(value=1.)
         self.amp2 = Sig(value=0.4)
         
-        self.wave3 = Sig(value=0.) #Valeurs par defaut, a changer par des appels de methode
+        self.wave3 = Sig(value=0.) #Valeurs par defaut a changer par des appels de methode
         self.freq3 = self.freq1
         self.transpo3 = Sig(value=0.)
         self.octave3 = Sig(value=1.)
@@ -33,7 +30,15 @@ class MixerSection():
         self.noise_type = 1 #Seulement pour la valeur par defaut.
         self.noise_amp = Sig(value=0.3)
         
-        #self.external = a rajouter eventuellement avec ses attributs.
+        #Pour le fun, un petit SfPlayer (je pourrais peut-etre faire de la synthese ou de la modulation avec...)
+        #(Il fallait que je plogue le rire de Jacques Languirand dans mon travail - c'est mon baseball majeur a moi!)
+        #Pour changer la source : appeler objetMixerSection.setSfPlayer_path(path)
+        self.sfPlayer_mul = 0.4
+        self.sfPlayer = SfPlayer(path="jacquesLanguirand.aiff", speed=1, loop=True, offset=0, interp=2, mul=self.sfPlayer_mul, add=0).stop()
+        
+        #Source externe: verifier le channel.
+        self.external_mul = 0.4
+        self.external = Input(mul=self.external_mul).stop()
         
         self.osc1 = Oscillator(wave=self.wave1, freq=self.freq1, transpo=0., octave=self.octave1, lfo=0., amp=self.amp1).stop()
         self.osc2 = Oscillator(wave=self.wave2, freq=self.freq2, transpo=self.transpo2, octave=self.octave2, lfo=0., amp=self.amp2).stop()
@@ -53,8 +58,9 @@ class MixerSection():
         self.osc2Aux = OscTrig(table=self.osc2.newTable, trig=self.metro, freq=self.osc2.freq, mul=0.5).stop()
         
         #Signal de sortie
-        self.inputs = [self.osc1.getOut(), self.osc2.getOut(), self.osc3.getOut(), self.noise.getOut(), self.fm, self.osc2Aux] #ajouter external et sfplayer s'il y a lieu
-        self.mix = Mix(input=self.inputs, voices=1, mul=.8)
+        self.mul = mul
+        self.inputs = [self.osc1.getOut(), self.osc2.getOut(), self.osc3.getOut(), self.noise.getOut(), self.sfPlayer, self.external, self.fm, self.osc2Aux] #ajouter external et sfplayer s'il y a lieu
+        self.mix = Mix(input=self.inputs, voices=1, mul=self.mul)
     
     #Methodes generales (out, getOut, stop, play)
     def out(self):
@@ -71,6 +77,9 @@ class MixerSection():
     def stop(self):
         self.mix.stop()
         return self
+        
+    def setMul(self,x):
+        self.mix.mul = x;
         
     #Methodes pour les parametres des oscillateurs et du generateur de bruit
     #Refaire et remplacer tous les Sig par des valeurs par defaut, et les self.attribut.value par des
@@ -119,20 +128,30 @@ class MixerSection():
         
     def setNoiseType(self,x):
         self.noise.setNoise(x)
-        #self.noise_type = x
         
     def setNoiseAmp(self,x):
         self.noise_amp.value = x
+        
+    def setSfPlayer_mul(self,x):
+        self.sfPlayer.mul = x
+        
+    def setSfPlayer_path(self,path):
+        self.sfPlayer.path = path
     
     #Methodes on/off pour les oscillateurs et le generateur:    
     
-    #A ajouter au moment de l'ajout de l'option source externe.  A copier si on ajoute aussi un SfPlayer
-    #def externalOn(self):
-        #self.external.play()
+    def externalOn(self):
+        self.external.play()
         
-    #def externalOff(self):
-        #self.external.stop()
+    def externalOff(self):
+        self.external.stop()
         
+    def sfPlayerOn(self):
+        self.sfPlayer.play()
+        
+    def sfPlayerOff(self):
+        self.sfPlayer.stop()
+    
     def osc1On(self):
         self.osc1.play()
         
@@ -157,13 +176,13 @@ class MixerSection():
     def noiseOff(self):
         self.noise.stop()
         
-    def glideOn(self, x): #On doit absolument fournir un temps de glide en argument!
+    def glideOn(self, x):
         self.osc1.setGlide(x) 
         self.osc2.setGlide(x)
         self.osc3.setGlide(x)
         
-    def glideOff(self): #Devrait marcher, car ne fait que parler au risetime pour l'interpolation de frequences
-        self.osc1.freq_interp.risetime = 0.05 #(n'influence pas les frequences directement)
+    def glideOff(self):
+        self.osc1.freq_interp.risetime = 0.05
         self.osc2.freq_interp.risetime = 0.05
         self.osc3.freq_interp.risetime = 0.05
         
@@ -196,7 +215,7 @@ class MixerSection():
 
 
 if __name__ == '__main__':
-    s = Server().boot()
-    mix = MixerSection(130.,0.).out()
+    s = Server(duplex=1).boot()
+    mix = MixerSection(130.,0.,0.8).out()
     s.gui(locals())
         
