@@ -4,31 +4,32 @@ from audio import *
 
 #Synthese FM: j'obtiens un signal unipolaire. Trouver le bogue.
 
+#On pourrait passer le signal obtenu de l'objet MixerSection dans un effet externe avant de le passer au filtre.
 class MixerSection():
     def __init__(self, ref_freq=130., finetune=0., mul=0.8):
         self.ref_freq = Sig(value=ref_freq)
         self.fine_tune = Sig(value=finetune)
         
-        self.wave1 = Sig(value=0.) #Sinusoidale par defaut
+        self.wave1 = 0. #Sinusoidale par defaut
         self.freq1 = ref_freq*(Pow(base=2.0, exponent=(self.fine_tune/12.0), mul=1.))#controle avec le fine_tune, +ou- 2 demi-tons par rapport a la frequence de reference
-        self.octave1 = Sig(value=1.) #Verifier s'il ya un conflit avec freq1 et la frequence de l'objet oscillator.
-        self.amp1 = Sig(value=0.4)
+        self.octave1 = 1. #Verifier s'il ya un conflit avec freq1 et la frequence de l'objet oscillator.
+        self.amp1 = 0.4
         
-        self.wave2 = Sig(value=0.) #Valeurs par defaut a changer par des appels de methode
+        self.wave2 = 0. #Valeurs par defaut a changer par des appels de methode
         self.freq2 = self.freq1
-        self.transpo2 = Sig(value=0.)
-        self.octave2 = Sig(value=1.)
-        self.amp2 = Sig(value=0.4)
+        self.transpo2 = 0.
+        self.octave2 = 1.
+        self.amp2 = 0.4
         
-        self.wave3 = Sig(value=0.) #Valeurs par defaut a changer par des appels de methode
+        self.wave3 = 0. #Valeurs par defaut a changer par des appels de methode
         self.freq3 = self.freq1
-        self.transpo3 = Sig(value=0.)
-        self.octave3 = Sig(value=1.)
-        self.lfo3 = Sig(value=0.)
-        self.amp3 = Sig(value=0.4)
+        self.transpo3 = 0.
+        self.octave3 = 1.
+        self.lfo3 = 0.
+        self.amp3 = 0.4
         
         self.noise_type = 1 #Seulement pour la valeur par defaut.
-        self.noise_amp = Sig(value=0.3)
+        self.noise_amp = 0.3
         
         #Pour le fun, un petit SfPlayer (je pourrais peut-etre faire de la synthese ou de la modulation avec...)
         #(Il fallait que je plogue le rire de Jacques Languirand dans mon travail - c'est mon baseball majeur a moi!)
@@ -82,8 +83,6 @@ class MixerSection():
         self.mix.mul = x;
         
     #Methodes pour les parametres des oscillateurs et du generateur de bruit
-    #Refaire et remplacer tous les Sig par des valeurs par defaut, et les self.attribut.value par des
-    #  appels de methodes parlant directement a l'objet generateur concerne?
     def setRefFreq(self,x):
         self.ref_freq.value = x
         
@@ -91,47 +90,50 @@ class MixerSection():
         self.fine_tune.value = x
         
     def setWave1(self,x):
-        self.wave1.value = x
+        self.osc1.setWave(x)
         
     def setOctave1(self,x):
-        self.octave1.value = x
+        self.osc1.setOctave(x)
         
     def setAmp1(self,x):
-        self.amp1.value = x
+        self.osc1.setAmp(x)
         
     def setWave2(self,x):
-        self.wave2.value = x
+        self.osc2.setWave(x)
         
     def setTranspo2(self,x):
-        self.transpo2.value = x
+        self.osc2.setTranspo(x)
         
     def setOctave2(self,x):
-        self.octave2.value = x
+        self.osc2.setOctave(x)
         
     def setAmp2(self, x):
-        self.amp2.value = x
+        self.osc2.setAmp(x)
 
     def setWave3(self,x):
-        self.wave3.value = x
+        self.osc3.setWave(x)
 
     def setTranspo3(self,x):
-        self.transpo3.value = x
+        self.osc3.setTranspo(x)
 
     def setOctave3(self,x):
-        self.octave3.value = x
+        self.osc3.setOctave(x)
 
     def setLFO3Mode(self,x):
-        self.lfo3.value = x
+        self.osc3.setLFO(x)
         
     def setAmp3(self, x):
-        self.amp3.value = x
+        self.osc3.setAmp(x)
         
     def setNoiseType(self,x):
         self.noise.setNoise(x)
         
     def setNoiseAmp(self,x):
-        self.noise_amp.value = x
+        self.noise.setAmp(x)
         
+    def setExternal_mul(self,x):
+        self.external.mul = x
+    
     def setSfPlayer_mul(self,x):
         self.sfPlayer.mul = x
         
@@ -176,15 +178,21 @@ class MixerSection():
     def noiseOff(self):
         self.noise.stop()
         
+    #Glide Rate
     def glideOn(self, x):
-        self.osc1.setGlide(x) 
-        self.osc2.setGlide(x)
-        self.osc3.setGlide(x)
+        self.osc1.setGlide(1.) 
+        self.osc2.setGlide(1.)
+        self.osc3.setGlide(1.)
         
     def glideOff(self):
         self.osc1.freq_interp.risetime = 0.05
         self.osc2.freq_interp.risetime = 0.05
         self.osc3.freq_interp.risetime = 0.05
+        
+    def setGlideRate(x):
+        self.osc1.freq_interp.risetime = x
+        self.osc2.freq_interp.risetime = x
+        self.osc3.freq_interp.risetime = x
         
     #Synthese FM (3-1 FM)
     def synthFMOn(self):

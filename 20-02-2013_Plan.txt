@@ -13,14 +13,15 @@ Interface graphique: grosse classe "MyFrame"!
 -Prévoir 4 cases pour le mixer (1 knob + 1 potentiomètre par case, sauf pour le volume master, qui n'a qu'un potentiomètre)
 
 Pour le générateur de bruit:
--Choix entre bruit blanc et bruit rose (menu avec 2 choix - on verra pour un filtre à pente variable plus tard.) --> set.noise
+-Choix entre bruit blanc et bruit rose (menu avec 2 choix - on verra pour un filtre à pente variable plus tard.)
 
 Pour l'oscillateur principal (principal -> à indiquer à l'objet)
--Forme d'onde (commutateur) --> set.wave
--Fine tune (pour main_freq - knob) --> set.main_freq
--Octave (commutateur) --> set.octave
+-Forme d'onde (commutateur)
+-Fine tune (pour main_freq - knob)
+-Octave (commutateur)
 
-Pour les oscillateurs secondaires (secondaire -> à indiquer à l'objet)
+Pour les oscillateurs secondaires (secondaire -> à indiquer à l'objet; les oscillateurs principal et secondaires
+sont des objets de la même classe.  Voir la déclaration de classe MixerSection pour plus de détails.)
 -Forme d'onde (commutateur) --> set.wave
 -Fréquence (pour other_freqs - knob) --> set.sec_freq
 -Octave (commutateur) --> set.octave

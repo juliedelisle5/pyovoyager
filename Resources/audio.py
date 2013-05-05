@@ -58,12 +58,12 @@ class Oscillator():
         -setLFO(): sets the LFO mode : 0.=normal, 1.=LFO (4 octaves below the principal frequency)
         -setAmp(): sets the amplitude parameter (amp) """
     
-    def __init__(self, wave=0., freq=130., transpo=0., octave=1., lfo=0., glide=0.05, amp=0.2):
+    def __init__(self, wave=0., freq=130., transpo=0., octave=1., lfo=0., glide=0.005, amp=0.2):
         self.transpo = Sig(value=(Pow(base=2.0, exponent=(transpo/12.0), mul=1.))) 
         self.octave = Sig(octave) #En realite, la valeur de self.octave sera comprise entre 1 et 6 (valeurs discretes en float).
         self.lfo = Sig(value=(Pow(base=2.0, exponent=(lfo*4.), mul=1.))) #LFO: 0 pour mode normal, 1 pour mode LFO.
         self.amp = Sig(amp)
-        self.freq = Sig(value=freq*self.octave*self.transpo/self.lfo)
+        self.freq = Sig(value=freq*(Pow(base=2.0, exponent=self.octave-2.))*self.transpo/self.lfo)
         self.glide = glide
         self.freq_interp = Port(input=self.freq, risetime = self.glide)
         
@@ -181,7 +181,7 @@ class Filter(): #Le changement d'input fait planter le programme. (Il ne devrait
         self.input = input
         self.in_fader = InputFader(self.input)
         self.cutoff = Sig(value=cutoff)
-        self.spacing = Sig(value=spacing) #Entre -2 et 2 (float). Indique le nombre d'octaves entre les deux frequences de coupure.
+        self.spacing = Sig(value=spacing) #Entre -3 et 3 (float). Indique le nombre d'octaves entre les deux frequences de coupure.
         
         self.freq1 = Sig(value=(self.cutoff*Pow(base=2.,exponent=-1.*self.spacing))) #a repenser
         self.freq2 = Sig(value=(self.cutoff*Pow(base=2.,exponent=self.spacing)))
@@ -214,7 +214,7 @@ class Filter(): #Le changement d'input fait planter le programme. (Il ne devrait
     def out(self): #Envoie le son aux haut-parleurs et retourne l'objet lui-meme
         self.filter1_pan.out()
         self.filter2_pan.out()
-        return self
+        return self   
 
     def stop(self):
         self.filter1_pan.stop()
