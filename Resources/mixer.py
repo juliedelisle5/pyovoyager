@@ -2,8 +2,6 @@ from pyo import *
 from random import uniform
 from audio import *
 
-#Synthese FM: j'obtiens un signal unipolaire. Trouver le bogue.
-
 #On pourrait passer le signal obtenu de l'objet MixerSection dans un effet externe avant de le passer au filtre.
 class MixerSection():
     def __init__(self, ref_freq=130., finetune=0., mul=0.8):
@@ -11,8 +9,8 @@ class MixerSection():
         self.fine_tune = Sig(value=finetune)
         
         self.wave1 = 0. #Sinusoidale par defaut
-        self.freq1 = ref_freq*(Pow(base=2.0, exponent=(self.fine_tune/12.0), mul=1.))#controle avec le fine_tune, +ou- 2 demi-tons par rapport a la frequence de reference
-        self.octave1 = 1. #Verifier s'il ya un conflit avec freq1 et la frequence de l'objet oscillator.
+        self.freq1 = self.ref_freq*(Pow(base=2.0, exponent=(self.fine_tune/12.0), mul=1.))#controle avec le fine_tune, +ou- 2 demi-tons par rapport a la frequence de reference
+        self.octave1 = 1.
         self.amp1 = 0.4
         
         self.wave2 = 0. #Valeurs par defaut a changer par des appels de methode
@@ -49,10 +47,10 @@ class MixerSection():
         #Pour la synthese FM
         self.ratio = Sig(value=(self.osc3.freq/self.osc1.freq))
         self.index = Sig(self.osc3.amp*20.)
-        self.mod_osc = Osc(table=self.osc3.newTable, freq=self.freq1*self.ratio, mul=0.5).stop()
+        self.mod_osc = Osc(table=self.osc3.newTable, freq=self.freq1*self.ratio, mul=0.1).stop()
         self.port_phasor_freq = self.mod_osc*self.freq1*self.ratio*self.index
         self.port_phasor = Phasor(freq=self.port_phasor_freq+self.freq1).stop()
-        self.fm = Osc(table=self.osc1.newTable, freq=self.port_phasor_freq, add=-0.5).stop()
+        self.fm = Osc(table=self.osc1.newTable, freq=self.port_phasor_freq, mul=0.1, add=-0.05).stop()
         
         #Pour le Sync 1-2
         self.metro = Metro(time=1/self.freq1).stop()
@@ -179,7 +177,7 @@ class MixerSection():
         self.noise.stop()
         
     #Glide Rate
-    def glideOn(self, x):
+    def glideOn(self):
         self.osc1.setGlide(1.) 
         self.osc2.setGlide(1.)
         self.osc3.setGlide(1.)

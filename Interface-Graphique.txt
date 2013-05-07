@@ -1,27 +1,31 @@
-Interface graphique - Guide (last update: dimanche 5 mai 2013)
-L'interface graphique sera une grosse classe "MyFrame", qui n'existe pas encore pour le moment. Il est possible d'utiliser le synthétiseur en partant le script adsr.py avec un contrôleur MIDI virtuel ou physique branché à l'ordinateur.  Les changements de paramètres (décrits plus bas) et les interrupteurs on/off se feront avec des appels de méthode via l'interpréteur Python.
+Interface graphique - Guide (last update: mardi 7 mai 2013)
 
-Une instance de la classe VolumeEnv doit être créée dans le fichier principal. Elle regroupe tous les générateurs de sons et de bruits ainsi que les filtres. C'est sur les objets de type enveloppe qu'on appellera la méthode out(), comme dans le fichier adsr.py.
+L'interface graphique sera une grosse classe "MyFrame", qui n'existe pas encore pour le moment. Il est possible de tester le synthétiseur en partant le script adsr.py avec un contrôleur MIDI virtuel ou physique branché à l'ordinateur.  Les changements de paramètres (décrits plus bas) et les interrupteurs on/off se feront avec des appels de méthode via l'interpréteur Python.
 
+À la fin du projet, une instance de la classe ADSR devra être créée dans le fichier principal. Elle regroupe tous les générateurs de sons et de bruits ainsi que les filtres. C'est sur les objets de type enveloppe qu'on appellera la méthode out(), comme dans le fichier adsr.py.
+
+Voici la liste des méthodes qui peuvent être appelées (et des paramètres qui peuvent être contrôlés):
 
 Section Mixer:
 -On/off source externe (switch) --> Appeler enveloppe.mixer.externalOn()
--Volume source externe (knob) --> Appeler enveloppe.mixer.setExternal_mul(x) --> tous les volumes: valeur float entre 0. et 1.
+-Volume source externe (potentiomètre) --> Appeler enveloppe.mixer.setExternal_mul(x) --> tous les volumes: valeur float entre 0. et 1.
 -On/off sfPlayer (switch) --> Appeler enveloppe.mixer.sfPlayerOn() et sfPlayerOff()
--Volume sfPlayer (knob) --> Appeler enveloppe.mixer.setSfPlayer_mul(x)
+-Volume sfPlayer (potentiomètre) --> Appeler enveloppe.mixer.setSfPlayer_mul(x)
 -Path du sfPlayer (pour changer de son) --> Appeler enveloppe.mixer.setSfPlayer_path(path)
 -On/off générateur de bruit (switch) --> Appeler enveloppe.mixer.noiseOn() et noiseOff()
--Volume générateur de bruit (knob) --> Appeler enveloppe.mixer.setNoiseAmp(x)
+-Volume générateur de bruit (potentiomètre) --> Appeler enveloppe.mixer.setNoiseAmp(x)
     *Prévoir un vumètre pour le signal d'entrée de la source externe.
 -On/off oscillateur principal (switch) - Appeler enveloppe.mixer.osc1On() et osc1Off()
--Volume oscillateur principal (knob) --> Appeler enveloppe.mixer.setAmp1(x)
+-Volume oscillateur principal (potentiomètre) --> Appeler enveloppe.mixer.setAmp1(x)
 -On/off oscillateur 2 (switch) - Appeler enveloppe.mixer.osc2On() et osc2Off()
--Volume oscillateur 2 (knob) --> Appeler enveloppe.mixer.setAmp2(x)
+-Volume oscillateur 2 (potentiomètre) --> Appeler enveloppe.mixer.setAmp2(x)
 -On/off oscillateur 3 (switch) - Appeler enveloppe.mixer.osc3On() et osc3Off()
--Volume oscillateur 3 (knob) --> Appeler enveloppe.mixer.setAmp3(x)
+-Volume oscillateur 3 (potentiomètre) --> Appeler enveloppe.mixer.setAmp3(x)
+
 ***
--Prévoir 4 places pour des générateurs; on aura un générateur de bruit, un oscillateur principal et deux oscillateurs secondaires par défaut (3 knobs/commutateurs par générateur sauf pour le générateur de bruit, qui n'a qu'un commutateur (ou un potentiomètre dans le cas d'un filtre à pente variable, ajustable par l'utilisateur - à voir)).
--Prévoir 4 cases pour le mixer (1 knob + 1 potentiomètre par case, sauf pour le volume master, qui n'a qu'un potentiomètre)
+Indication pour l'interface:
+-Prévoir 4 places pour des générateurs; on aura un générateur de bruit, un oscillateur principal et deux oscillateurs secondaires par défaut (3 potentiomètres/commutateurs par générateur sauf pour le générateur de bruit, qui n'a qu'un commutateur (ou un potentiomètre dans le cas d'un filtre à pente variable, ajustable par l'utilisateur - à voir)).
+-Prévoir 4 cases pour le mixer (1 potentiomètre + 1 potentiomètre par case, sauf pour le volume master, qui n'a qu'un potentiomètre)
 ***
 
 Volume master
@@ -30,27 +34,27 @@ Volume master
 
 Section oscillateurs/générateur de bruit
 Générateur de bruit:
--Choix entre bruit blanc, bruit rose et bruit brun (menu avec 3 choix ou commutateur)
+-Choix entre bruit blanc, bruit rose et bruit brun (menu avec 3 choix ou commutateur) --> Appeler enveloppe.mixer.setNoiseType(integer: 1=blanc,2=rose,3=brun)
 
 Pour l'oscillateur principal
--Forme d'onde (knob) --> Appeler enveloppe.mixer.setWave1(float entre 0. et 1. pour le table morph.)
+-Forme d'onde (potentiomètre) --> Appeler enveloppe.mixer.setWave1(float entre 0. et 1. pour le table morph.)
 -Octave (commutateur) --> Appeler enveloppe.mixer.setOctave1(float entre 1. et 6.)
 
 Pour l'oscillateur 2
 -Forme d'onde (commutateur) --> Appeler enveloppe.mixer.setWave2(float entre 0. et 1. pour le table morph.)
--Transposition (knob) --> Appeler enveloppe.mixer.setTranspo2(float entre -7. et +7.)
+-Transposition (potentiomètre) --> Appeler enveloppe.mixer.setTranspo2(float entre -7. et +7.)
 -Octave (commutateur) --> Appeler enveloppe.mixer.setOctave2(float entre 1. et 6.)
 
 Pour l'oscillateur 2
 sont des objets de la même classe.  Voir la déclaration de classe MixerSection pour plus de détails.)
--Forme d'onde (commutateur) --> Appeler enveloppe.mixer.setWave3(valeur entre 0. et 1. pour le table morph.)
--Transposition (knob) --> Appeler enveloppe.mixer.setTranspo3(x)
+-Forme d'onde (commutateur) --> Appeler enveloppe.mixer.setWave3(valeur entre 0. et 1. pour le morphing de table d'onde)
+-Transposition (potentiomètre) --> Appeler enveloppe.mixer.setTranspo3(float entre -7. et +7.)
 -Octave (commutateur) --> Appeler enveloppe.mixer.setOctave3(float entre 1. et 6.)
 
 Finetune et Glide Rate:
--Fine tune (knob) --> Appeler enveloppe.mixer.setFineTune(float entre -2. et 2. - demi-tons autour de la freq. centrale)
+-Fine tune (potentiomètre) --> Appeler enveloppe.mixer.setFineTune(float entre -2. et 2. - demi-tons autour de la freq. centrale)
 -Glide on/off (switch) --> Appeler enveloppe.mixer.glideOn() et glideOff()
--Glide rate (knob logarithmique) --> Appeler enveloppe.mixer.setGlideRate(float entre 0. et 5. - temps de transition en secondes)
+-Glide rate (potentiomètre logarithmique) --> Appeler enveloppe.mixer.setGlideRate(float entre 0. et 5. - temps de transition en secondes)
 
 Options de la section Oscillateurs:
 -1-2 Sync (switch) --> Appeler enveloppe.mixer.sync12On() et sync12Off()
@@ -58,28 +62,40 @@ Options de la section Oscillateurs:
 -3 KB Cont (switch) --> Appeler enveloppe.kb3ControlOn() et enveloppe.kb3ControlOff()
 -3 Freq (switch) --> Appeler enveloppe.mixer.setLFO3Mode(1. ou 2. en float - desactive ou active le mode LFO du 3e oscillateur)
 
+Contrôle de la fréquence, de la source externe, du sfPlayer et du générateur de bruit à partir du clavier MIDI:
+-Contrôle MIDI de la fréquence (switch) --> Appeler enveloppe.kbFreqCtlOn() et kbFreqCtlOff()
+-Source externe (switch) --> Appeler enveloppe.kbExtControlOn() et kbExtControlOff() *Attention au feedback!
+-SfPlayer (switch) --> Appeler enveloppe.kbSFPControlOn() et kbSFPControlOff()
+-Générateur de bruit (switch) --> Appeler enveloppe.kbNoiseControlOn() et kbNoiseControlOff()
 
 Section filtres:
--Mode dual lowpass/lowpass-highpass (commutateur/switch)--> Appeler enveloppe.filtre.setFilter_mode(1 ou 2)
--Spacing (knob) --> Appeler enveloppe.filtre.setSpacing(float entre -3. et 3. - nombre d'octaves entre les deux fréquences de coupure)
--Resonance (knob) --> Appeler enveloppe.filtre.setResonance(float entre 0. et 10. - facteur Q du filtre, entre 1 et 500)
+-Mode dual lowpass/lowpass-highpass (commutateur/switch) --> Appeler enveloppe.filtre.setFilter_mode(1 ou 2)
+-Spacing (potentiomètre) --> Appeler enveloppe.filtre.setSpacing(float entre -3. et 3. - nombre d'octaves entre les deux fréquences de coupure)
+-Resonance (potentiomètre) --> Appeler enveloppe.filtre.setResonance(float entre 0. et 10. - facteur Q du filtre, entre 1 et 500)
 -Le paramètre "keyboard control amount" n'a pas encore été implémenté dans cette version de l'émulateur.
 
 
 Section enveloppes:
 Enveloppe destinée au volume:
--Contrôle MIDI de la fréquence (switch) --> Appeler enveloppe.kbFreqCtlOn() et kbFreqCtlOff()
 -Contrôle MIDI de l'enveloppe ADSR de volume (switch) --> Appeler enveloppe.kbAmpCtlOn() et kbAmpCtlOff()
--Attack (knob logarithmique) --> Appeler enveloppe.setAttack(float entre 0.001 et 10. - en secondes)
--Decay (knob logarithmique) --> Appeler enveloppe.setDecay(float entre 0.001 et 10. - en secondes)
--Sustain (knob logarithmique) --> Appeler enveloppe.setSustain(float entre 0.001 et 10. - en secondes)
-    *Seulement dans le cas où le contrôle clavier de l'enveloppe est désactivé.
--Release (knob logarithmique) --> Appeler enveloppe.setRelease(float entre 0.001 et 10. - en secondes)
+-Attack (potentiomètre logarithmique) --> Appeler enveloppe.setAttack(float entre 0.001 et 10. - en secondes)
+-Decay (potentiomètre logarithmique) --> Appeler enveloppe.setDecay(float entre 0.001 et 10. - en secondes)
+-Sustain (potentiomètre logarithmique) --> Appeler enveloppe.setSustain(float entre 0.001 et 10. - en secondes)
+    (Seulement dans le cas où le contrôle clavier de l'enveloppe est désactivé.)
+-Release (potentiomètre logarithmique) --> Appeler enveloppe.setRelease(float entre 0.001 et 10. - en secondes)
 
-Enveloppe destinée au filtre: à implémenter
+Enveloppe destinée aux filtres:
+-Contrôle MIDI de l'enveloppe ADSR des filtres (switch) --> Appeler enveloppe.kbFilterCtlOn() et kbFilterCtlOff()
+-Attack (potentiomètre logarithmique) --> Appeler enveloppe.setAttack2(float entre 0.001 et 10. - en secondes)
+-Decay (potentiomètre logarithmique) --> Appeler enveloppe.setDecay2(float entre 0.001 et 10. - en secondes)
+-Sustain (potentiomètre logarithmique) --> Appeler enveloppe.setSustain2(float entre 0.001 et 10. - en secondes)
+    (Seulement dans le cas où le contrôle clavier de l'enveloppe est désactivé.)
+-Release (potentiomètre logarithmique) --> Appeler enveloppe.setRelease2(float entre 0.001 et 10. - en secondes)
+-Amount to filter (potentiomètre linéaire) --> Appeler enveloppe.setAmount(float entre -5. et 5.)
 
-Section Primary LFO/Sample and Hold: à implémenter
+Reste à faire:
+MIDI learn et contrôle des différents paramètres des oscillateurs et du filtre à l'aide des potentiomètres d'un contrôleur MIDI.
 
-Modulation busses: à implémenter; contrôle d'une modulation au choix avec la roulette de modulation (contrôleur MIDI)
+Modulation busses: à implémenter, avec un LFO principal (classe oscillateur, en extra, avec synchronisation à différentes sources, au choix), la possibilité de moduler à partir du 3e oscillateur (en mode LFO), du générateur de bruit, d'une source externe ou d'un Sample-and-Hold; contrôle d'une modulation au choix avec la roulette de modulation ou d'une pédale (contrôleur MIDI). (Sans oublier le paramètre Amount, qui gère l'amplitude de la modulation.)
 
 Ribbon Controller et Touch Surface Controller: pourrait être intéressant

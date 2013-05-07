@@ -63,7 +63,7 @@ class Oscillator():
         self.octave = Sig(octave) #En realite, la valeur de self.octave sera comprise entre 1 et 6 (valeurs discretes en float).
         self.lfo = Sig(value=(Pow(base=2.0, exponent=(lfo*4.), mul=1.))) #LFO: 0 pour mode normal, 1 pour mode LFO.
         self.amp = Sig(amp)
-        self.freq = Sig(value=freq*(Pow(base=2.0, exponent=self.octave-2.))*self.transpo/self.lfo)
+        self.freq = Sig(value=freq*(Pow(base=2.0, exponent=self.octave))*self.transpo/self.lfo)
         self.glide = glide
         self.freq_interp = Port(input=self.freq, risetime = self.glide)
         
@@ -114,6 +114,7 @@ class Oscillator():
     def setTranspo(self,x):
         self.transpo.value = Pow(base=2.0,exponent=(x/12.0), mul=1.)
         
+    #Octave: sur le commutateur, il sera ecrit 32-16-8-4-2-1, mais les valeurs reelles seront des floats entre 1. et 6. (discrets)
     def setOctave(self,x): #octave, 32 par defaut (note la plus grave, comme les tuyaux d'orgue)
         self.octave.value = x
         
@@ -175,7 +176,7 @@ class NoiseGenerator():
         
 class Filter(): #Le changement d'input fait planter le programme. (Il ne devrait pas y en avoir de toute facon, mais on ne sait jamais.)
     
-    def __init__(self, input, filter_mode=1, cutoff=500., spacing=0, resonance=1., pan_mode=1, amp=0.8):
+    def __init__(self, input, filter_mode=1, cutoff=2000., spacing=0, resonance=1., pan_mode=1, amp=0.8):
         self.filter_mode = Sig(value=filter_mode)
         #self.input = Sig(value=input, mul=[1.,1.]) -->vieille version
         self.input = input
@@ -183,25 +184,26 @@ class Filter(): #Le changement d'input fait planter le programme. (Il ne devrait
         self.cutoff = Sig(value=cutoff)
         self.spacing = Sig(value=spacing) #Entre -3 et 3 (float). Indique le nombre d'octaves entre les deux frequences de coupure.
         
-        self.freq1 = Sig(value=(self.cutoff*Pow(base=2.,exponent=-1.*self.spacing))) #a repenser
-        self.freq2 = Sig(value=(self.cutoff*Pow(base=2.,exponent=self.spacing)))
+        self.variation = Sig(value=0.) #Pour le Amount to Filter (voir adsr.py). A zero par defaut.
+        self.freq1 = Sig(value=(self.cutoff*Pow(base=2.,exponent=-1.*self.spacing)*Pow(base=2, exponent=self.variation)))
+        self.freq2 = Sig(value=(self.cutoff*Pow(base=2.,exponent=self.spacing)*Pow(base=2, exponent=self.variation)))
         self.resonance = Sig(value=resonance)
         self.q = Sig(value=(self.resonance*4.99 + 1.)) #Resonance se situant entre 0 et 10, on vise un facteur Q entre 1 et 500.
 
         if filter_mode == 1: # dual lowpass
-            self.filter1 = Biquadx(self.in_fader, freq=self.freq1, q=self.q, type=0, stages=2, mul=0.6, add=0) #self.in_fader
-            self.filter2 = Biquadx(self.in_fader, freq=self.freq2, q=self.q, type=0, stages=2, mul=0.6, add=0) #self.in_fader
+            self.filter1 = Biquadx(self.in_fader, freq=self.freq1, q=self.q, type=0, stages=2, mul=0.6, add=0) 
+            self.filter2 = Biquadx(self.in_fader, freq=self.freq2, q=self.q, type=0, stages=2, mul=0.6, add=0) 
         elif filter_mode == 2: #lowpass/highpass
-            self.filter1 = Biquadx(self.in_fader, freq=self.freq1, q=self.q, type=0, stages=2, mul=0.6, add=0) #self.in_fader
-            self.filter2 = Biquadx(self.in_fader, freq=self.freq2, q=self.q, type=1, stages=2, mul=0.6, add=0) #self.in_fader
+            self.filter1 = Biquadx(self.in_fader, freq=self.freq1, q=self.q, type=0, stages=2, mul=0.6, add=0) 
+            self.filter2 = Biquadx(self.in_fader, freq=self.freq2, q=self.q, type=1, stages=2, mul=0.6, add=0) 
         
         pan_dict1 = {1:0.5, 2:0., 3:1., 4:0.} #1=50% de chaque cote; 2=filtre 1 a gauche, filtre 2 a droite
         pan_dict2 = {1:0.5, 2:1., 3:0., 4:0.} #3=filtre 1 a droite, filtre 2 a gauche, 4=mono (gauche)
         self.pan1 = SigTo(value=pan_dict1[pan_mode])
         self.pan2 = SigTo(value=pan_dict2[pan_mode])
         self.amp = Sig(value=amp)
-        self.filter1_pan = SPan(input=self.filter1.mix(1), outs=2, pan=self.pan1, mul=self.amp)
-        self.filter2_pan = SPan(input=self.filter2.mix(1), outs=2, pan=self.pan2, mul=self.amp)
+        self.filter1_pan = SPan(input=self.filter1.mix(1), outs=2, pan=self.pan1, mul=self.amp*(1./self.resonance))
+        self.filter2_pan = SPan(input=self.filter2.mix(1), outs=2, pan=self.pan2, mul=self.amp*(1./self.resonance))
         
         ### L'InputFader devrait etre au debut de la classe et recevoir directement l'arguement "input".
         ### Il pourrait remplacer l'objet Sig en self.input... ---> Cause un bogue. A regler!
@@ -231,6 +233,9 @@ class Filter(): #Le changement d'input fait planter le programme. (Il ne devrait
         
     def setCutoff(self,x):
         self.cutoff.value = x
+        
+    def setVariation(self,x):
+        self.variation.value = x
         
     def setSpacing(self,x):
         self.spacing.value = x
