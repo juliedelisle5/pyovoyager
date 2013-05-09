@@ -1,8 +1,8 @@
-Interface graphique - Guide (last update: mardi 7 mai 2013)
+Interface graphique - Guide (last update: jeudi 9 mai 2013)
 
-L'interface graphique sera une grosse classe "MyFrame", qui n'existe pas encore pour le moment. Il est possible de tester le synthétiseur en partant le script adsr.py avec un contrôleur MIDI virtuel ou physique branché à l'ordinateur.  Les changements de paramètres (décrits plus bas) et les interrupteurs on/off se feront avec des appels de méthode via l'interpréteur Python.
+L'interface graphique sera une grosse classe "MyFrame", qui n'existe pas encore pour le moment. Il est possible de tester le synthétiseur en partant le script adsr.py avec un contrôleur MIDI virtuel ou physique branché à l'ordinateur.  Les changements de paramètres (décrits plus bas) et les interrupteurs on/off se feront, pour le moment, avec des appels de méthode via l'interpréteur Python.
 
-À la fin du projet, une instance de la classe ADSR devra être créée dans le fichier principal. Elle regroupe tous les générateurs de sons et de bruits ainsi que les filtres. C'est sur les objets de type enveloppe qu'on appellera la méthode out(), comme dans le fichier adsr.py.
+À la fin du projet, une instance de la classe ADSR devra être créée dans le fichier principal. Elle regroupe tous les générateurs de sons et de bruits ainsi que les filtres. C'est sur les objets ADSR qu'on appellera la méthode out(), comme dans le fichier adsr.py.
 
 Voici la liste des méthodes qui peuvent être appelées (et des paramètres qui peuvent être contrôlés):
 
@@ -93,7 +93,7 @@ Enveloppe destinée aux filtres:
 -Release (potentiomètre logarithmique) --> Appeler enveloppe.setRelease2(float entre 0.001 et 10. - en secondes)
 -Amount to filter (potentiomètre linéaire) --> Appeler enveloppe.setAmount(float entre -5. et 5.)
 
-Reste à faire:
+Reste à faire (et ne sera pas fait pour la remise finale, malheureusement):
 MIDI learn et contrôle des différents paramètres des oscillateurs et du filtre à l'aide des potentiomètres d'un contrôleur MIDI.
 
 Modulation busses: à implémenter, avec un LFO principal (classe oscillateur, en extra, avec synchronisation à différentes sources, au choix), la possibilité de moduler à partir du 3e oscillateur (en mode LFO), du générateur de bruit, d'une source externe ou d'un Sample-and-Hold; contrôle d'une modulation au choix avec la roulette de modulation ou d'une pédale (contrôleur MIDI). (Sans oublier le paramètre Amount, qui gère l'amplitude de la modulation.)
