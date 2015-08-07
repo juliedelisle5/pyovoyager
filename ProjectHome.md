@@ -1,0 +1,1 @@
+Analog synthesizer emulator inspired by the Minimoog Voyager XL, using Pyo, a Python digital signal processing module.
